@@ -88,6 +88,33 @@ def test_input_string_transform_factory_handles_us_locale(
 @pytest.mark.parametrize(
     ("x", "expected"),
     [
+        ("1,00,000", "100000"),
+        ("12,34,567", "1234567"),
+        ("1,23,45,678", "12345678"),
+        ("-12,34,567.89", "-1234567.89"),
+        ("1,23,456e2", "123456e2"),
+        ("value12,34,567.txt", "value1234567.txt"),
+        ("12,345", "12345"),
+        ("1,234,567", "1234567"),
+        ("12,3456", "12,3456"),
+        ("12.34,567", "12.34,567"),
+    ],
+)
+def test_input_string_transform_factory_handles_secondary_grouping(
+    x: str,
+    expected: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("natsort.utils.get_thousands_sep", lambda: ",")
+    monkeypatch.setattr("natsort.utils.get_decimal_point", lambda: ".")
+    monkeypatch.setattr("natsort.utils.get_grouping", lambda: (3, 2), raising=False)
+    transform = input_string_transform_factory(ns.LOCALENUM | ns.FLOAT)
+    assert transform(x) == expected
+
+
+@pytest.mark.parametrize(
+    ("x", "expected"),
+    [
         ("12.543.642642,5345.34980", "12543.642642,5345.34980"),
         ("12.59443.642.642,53.4534980", "12.59443.642642,53.4534980"),  # No change
         ("12543.642.642,5.34534980", "12543.642642,5.34534980"),

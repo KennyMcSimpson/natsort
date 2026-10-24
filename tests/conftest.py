@@ -55,6 +55,20 @@ def with_locale_de_de() -> Iterator[None]:
 
 
 @pytest.fixture
+def with_locale_en_in() -> Iterator[None]:
+    """Load the Indian English locale, skipping if it is unavailable."""
+    orig = locale.getlocale()
+    try:
+        load_locale("en_IN")
+    except locale.Error:
+        pytest.skip("requires en_IN locale to be installed")
+    else:
+        yield
+    finally:
+        locale.setlocale(locale.LC_ALL, orig)
+
+
+@pytest.fixture
 def with_locale_cs_cz() -> Iterator[None]:
     """
     Convenience to load the cs_CZ locale - reset when complete - skip if missing.

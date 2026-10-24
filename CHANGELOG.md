@@ -20,6 +20,8 @@ Unreleased
 
 ### Fixed
 
+- Recognize secondary digit grouping in locales such as Indian English when
+  sorting numbers with `LOCALENUM` or `LOCALE`.
 - Recognize locale thousands separators when `COMPATIBILITYNORMALIZE` is enabled,
   including non-breaking spaces used by French locales.
 - CLI no longer strips leading and trailing whitespace from entries, which

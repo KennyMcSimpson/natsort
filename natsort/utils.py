@@ -61,6 +61,7 @@ from natsort.compat.fastnumbers import try_float, try_int
 from natsort.compat.locale import (
     StrOrBytes,
     get_decimal_point,
+    get_grouping,
     get_strxfrm,
     get_thousands_sep,
 )
@@ -632,9 +633,7 @@ def input_string_transform_factory(alg: NSType) -> StrToStr:
             (?<![0-9]{{4}})  # No more than 3 numbers
             {nodecimal}      # Cannot follow decimal
             {thou}           # The thousands separator
-            (?=[0-9]{{3}}    # Three numbers must follow
-             ([^0-9]|$)      # But a non-number after that
-            )
+            (?={grouped_digits})  # A complete digit group must follow
         """
         nodecimal = r""
         if alg & ns.FLOAT:
@@ -646,9 +645,17 @@ def input_string_transform_factory(alg: NSType) -> StrToStr:
             nodecimal += r"(?<!" + d + r"[0-9]{3})"
         # Input is already normalized when this expression is applied.
         thousands_sep = _normalize_input_factory(alg)(get_thousands_sep())
+        escaped_sep = re.escape(thousands_sep)
+        grouped_digits = r"[0-9]{3}([^0-9]|$)"
+        primary, secondary = get_grouping()
+        if thousands_sep and secondary != primary:
+            # Keep three-digit groups accepted, but also recognize secondary
+            # groups before another separator (e.g. 1,23,45,678 in en_IN).
+            grouped_digits += rf"|[0-9]{{{secondary}}}{escaped_sep}"
         strip_thousands = strip_thousands.format(
-            thou=re.escape(thousands_sep),
+            thou=escaped_sep,
             nodecimal=nodecimal,
+            grouped_digits=grouped_digits,
         )
         strip_thousands_re = re.compile(strip_thousands, flags=re.VERBOSE)
         function_chain.append(partial(strip_thousands_re.sub, ""))

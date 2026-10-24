@@ -63,6 +63,16 @@ try:
         sep = icu.DecimalFormatSymbols.kDecimalSeparatorSymbol
         return icu.DecimalFormatSymbols(get_icu_locale()).getSymbol(sep)
 
+    def get_grouping() -> tuple[int, int]:
+        """Return the primary and secondary digit group sizes for this locale."""
+        formatter = icu.NumberFormat.createInstance(get_icu_locale())
+        if not isinstance(formatter, icu.DecimalFormat):
+            return 3, 3
+        primary = formatter.getGroupingSize()
+        if primary <= 0:
+            return 3, 3
+        return primary, formatter.getSecondaryGroupingSize() or primary
+
 except ImportError:
     import locale
     from locale import strxfrm
@@ -132,3 +142,14 @@ except ImportError:
     def get_decimal_point() -> str:
         """Return the appropriate decimal point for this locale."""
         return locale.localeconv()["decimal_point"]
+
+    def get_grouping() -> tuple[int, int]:
+        """Return the primary and secondary digit group sizes for this locale."""
+        grouping = locale.localeconv()["grouping"]
+        if not grouping or not 0 < grouping[0] < locale.CHAR_MAX:
+            return 3, 3
+        primary = grouping[0]
+        secondary = grouping[1] if len(grouping) > 1 else 0
+        if not 0 < secondary < locale.CHAR_MAX:
+            secondary = primary
+        return primary, secondary

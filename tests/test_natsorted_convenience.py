@@ -69,6 +69,15 @@ def test_humansorted_is_identical_to_natsorted_with_locale_alg(
     assert humansorted(fruit_list) == natsorted(fruit_list, alg=ns.LOCALE)
 
 
+@pytest.mark.parametrize(
+    "alg", [ns.LOCALENUM, ns.LOCALE, ns.LOCALENUM | ns.FLOAT, ns.LOCALE | ns.FLOAT]
+)
+@pytest.mark.usefixtures("with_locale_en_in")
+def test_natsorted_respects_secondary_locale_grouping(alg: int) -> None:
+    values = ["12,34,567", "20,000", "1,00,000", "1,234"]
+    assert natsorted(values, alg=alg) == ["1,234", "20,000", "1,00,000", "12,34,567"]
+
+
 def test_index_natsorted_returns_integer_list_of_sort_order_for_input_list() -> None:
     given = ["num3", "num5", "num2"]
     other = ["foo", "bar", "baz"]
